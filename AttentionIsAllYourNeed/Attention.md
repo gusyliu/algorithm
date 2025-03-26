@@ -25,4 +25,12 @@ A2: 为了让梯度稳定传播
 
 
 ## 多头注意力（MHA）
-![alt text](./resources/image_MHA.png)
+![alt text](./resources/image_MHA.png)  
+Q3: 在split_head方法中，使用reshape后接transpose而非直接reshape到(batch_size, num_heads, seq_len, head_dim)是为什么？  
+A3: 参考这篇文章![reshape与transpose](./resources/reshape与transpose.md)
+
+## 多查询注意力注意力（MQA）
+![alt text](./resources/image_MQA.png)
+
+## 分组查询注意力（GQA）
+![alt text](./resources/image_GQA.png)
