@@ -1,13 +1,16 @@
 ---
 license: apache-2.0
-license_link: https://huggingface.co/Qwen/Qwen2.5-0.5B/blob/main/LICENSE
+license_link: https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/blob/main/LICENSE
 language:
 - en
 pipeline_tag: text-generation
+base_model: Qwen/Qwen2.5-0.5B
+tags:
+- chat
 library_name: transformers
 ---
 
-# Qwen2.5-0.5B
+# Qwen2.5-0.5B-Instruct
 
 ## Introduction
 
@@ -18,17 +21,15 @@ Qwen2.5 is the latest series of Qwen large language models. For Qwen2.5, we rele
 - **Long-context Support** up to 128K tokens and can generate up to 8K tokens.
 - **Multilingual support** for over 29 languages, including Chinese, English, French, Spanish, Portuguese, German, Italian, Russian, Japanese, Korean, Vietnamese, Thai, Arabic, and more. 
 
-**This repo contains the base 0.5B Qwen2.5 model**, which has the following features:
+**This repo contains the instruction-tuned 0.5B Qwen2.5 model**, which has the following features:
 - Type: Causal Language Models
-- Training Stage: Pretraining
+- Training Stage: Pretraining & Post-training
 - Architecture: transformers with RoPE, SwiGLU, RMSNorm, Attention QKV bias and tied word embeddings
 - Number of Parameters: 0.49B
 - Number of Paramaters (Non-Embedding): 0.36B
 - Number of Layers: 24
 - Number of Attention Heads (GQA): 14 for Q and 2 for KV
-- Context Length: Full 32,768 tokens
-
-**We do not recommend using base language models for conversations.** Instead, you can apply post-training, e.g., SFT, RLHF, continued pretraining, etc., on this model.
+- Context Length: Full 32,768 tokens and generation 8192 tokens
 
 For more details, please refer to our [blog](https://qwenlm.github.io/blog/qwen2.5/), [GitHub](https://github.com/QwenLM/Qwen2.5), and [Documentation](https://qwen.readthedocs.io/en/latest/).
 
@@ -40,6 +41,46 @@ With `transformers<4.37.0`, you will encounter the following error:
 ```
 KeyError: 'qwen2'
 ```
+
+## Quickstart
+
+Here provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+prompt = "Give me a short introduction to large language model."
+messages = [
+    {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
+    {"role": "user", "content": prompt}
+]
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True
+)
+model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+
+generated_ids = model.generate(
+    **model_inputs,
+    max_new_tokens=512
+)
+generated_ids = [
+    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+]
+
+response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+```
+
 
 ## Evaluation & Performance
 

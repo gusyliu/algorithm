@@ -1,7 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from datasets import load_dataset
 import torch
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 from data_loader import GSM8KDataLoader
 
@@ -34,6 +32,7 @@ class ModelEvaluator:
         print(f"Batch size: {self.eval_loader.batch_size}")
         print(f"Number of batches: {len(self.eval_loader)}")
         print(f"Sampler type: {type(self.eval_loader.sampler).__name__}")
+        print(f"Dataset features: {self.eval_loader.dataset.features}")
         
         with torch.no_grad():
             for batch in tqdm(self.eval_loader, desc="Evaluating"):
@@ -54,11 +53,11 @@ class ModelEvaluator:
                 
                 # 解码预测结果
                 preds = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
-                
+                pred_num = [int(pred.split('\\boxed{')[-1].split('}')[0]) if '\\boxed{' in pred else 0 for pred in preds]
                 # 这里添加您的评估逻辑
                 # 示例: 比较预测结果和真实答案
-                correct += sum(1 for pred, ans in zip(preds, batch['answers']) if pred == ans)
-                total += len(batch['answers'])
+                correct += sum(1 for pred, ans in zip(pred_num, batch['answer']) if pred == ans)
+                total += len(batch['answer'])
         
         return correct / total if total > 0 else 0
 
@@ -79,24 +78,26 @@ class ModelEvaluator:
         print(f"New Model ({new_model_path}): {new_score:.2%}")
         print(f"Improvement: {new_score - old_score:.2%}")
 
-# 示例配置
-default_config = {
-    'model': {
-        'name': 'D:/Document/学习/algorithm/rlhf/models/Qwen/Qwen2.5-0.5B'
-    },
-    'dataset': {
-        'gsm8k_dir': 'D:/Document/学习/algorithm/rlhf/datasets/openai/gsm8k',
-        'batch_size': 8,
-        'max_length': 512,
-        'num_workers': 2
-    },
-    'eval': {
-        'max_length': 128,
-        'num_beams': 5
-    }
-}
+
 
 if __name__ == "__main__":
+    # 示例配置
+    default_config = {
+        'model': {
+            'name': 'D:/Document/学习/algorithm/rlhf/models/Qwen/Qwen2.5-0.5B'
+        },
+        'dataset': {
+            'gsm8k_dir': 'D:/Document/学习/algorithm/rlhf/datasets/openai/gsm8k',
+            'batch_size': 1,
+            'max_length': 512,
+            'num_workers': 2
+        },
+        'eval': {
+            'max_length': 128,
+            'num_beams': 5
+        }
+    }
+
     evaluator = ModelEvaluator(default_config)
     model = evaluator.load_model(default_config['model']['name'])
     evaluator.evaluate_model(model)
