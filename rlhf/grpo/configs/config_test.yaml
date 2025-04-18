@@ -1,0 +1,8 @@
+dataset:
+  gsm8k_dir: "D:/Document/学习/algorithm/rlhf/datasets/openai/gsm8k"  # 数据集路径
+  batch_size: 32             # 批量大小
+  max_length: 512            # 最大序列长度
+  num_workers: 4             # 数据加载线程数
+
+model:
+  name: "D:/Document/学习/algorithm/rlhf/models/Qwen/Qwen2.5-0.5B"  # 模型名称

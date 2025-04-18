@@ -21,6 +21,7 @@ class MultiQueryAttention(nn.Module):
         if num_heads is None:
             num_heads = self.num_heads
         return x.reshape(batch_size, -1, num_heads, self.head_dim).transpose(1, 2)
+    
     def forward(self, hidden_state, attention_mask = None):
         batch_size = hidden_state.size(0)
 
